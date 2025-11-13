@@ -1,0 +1,50 @@
+# PureBlue OS Base - NVIDIA
+# Base image with NVIDIA proprietary drivers
+
+ARG FEDORA_VERSION
+ARG REGISTRY
+
+# Stage 1: Get akmods RPMs (NVIDIA proprietary drivers + kernel modules)
+FROM ghcr.io/ublue-os/akmods-nvidia:main-${FEDORA_VERSION} AS akmods-nvidia
+
+# Stage 2: Get common akmods
+FROM ghcr.io/ublue-os/akmods:main-${FEDORA_VERSION} AS akmods-common
+
+# Stage 3: Main build from our base image
+FROM ${REGISTRY}/base:${FEDORA_VERSION}
+
+# Re-declare build args for this stage
+ARG FEDORA_VERSION
+ARG REGISTRY
+
+# Copy entire akmods filesystem (contains RPMs at /tmp/rpms)
+COPY --from=akmods-nvidia / /tmp/akmods-nvidia
+COPY --from=akmods-common / /tmp/akmods-common
+
+# Install matching kernel from akmods (required for kmod compatibility)
+RUN dnf5 install -y \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-[0-9]*.rpm \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-core-*.rpm \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-*.rpm \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-core-*.rpm \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-extra-*.rpm
+
+# Install NVIDIA support packages (this creates nvidia repos)
+RUN dnf5 install -y \
+    /tmp/akmods-nvidia/rpms/ublue-os/ublue-os-nvidia-addons-*.rpm \
+    /tmp/akmods-common/rpms/ublue-os/ublue-os-akmods-addons-*.rpm || true
+
+# Enable NVIDIA repos
+RUN find /etc/yum.repos.d/ -name "*nvidia*" -exec sed -i 's/enabled=0/enabled=1/g' {} \; || true
+
+# Install NVIDIA drivers from repos (this provides nvidia-kmod-common)
+RUN dnf5 install -y \
+    nvidia-driver \
+    nvidia-driver-cuda \
+    nvidia-settings || \
+    echo "NVIDIA packages not found in repos, will install kmod directly"
+
+# Install the kernel module (nvidia-kmod-common should be satisfied)
+RUN dnf5 install -y \
+    /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia-*.rpm \
+    && rm -rf /tmp/akmods-nvidia /tmp/akmods-common

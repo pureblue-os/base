@@ -1,0 +1,17 @@
+# PureBlue OS Base
+# Plain Fedora bootc with minimal setup
+
+ARG FEDORA_VERSION
+
+FROM quay.io/fedora/fedora-bootc:${FEDORA_VERSION}
+
+# Make /opt mutable for packages like Chrome, Docker Desktop
+# NOTE: Most apps should be installed via Flatpak or in distrobox
+# This is mainly for enterprise/proprietary software that requires /opt
+# RUN test -L /opt || { rmdir /opt && ln -s /var/opt /opt; } && \
+#     mkdir -p /var/roothome /var/opt
+
+# Install base tooling
+RUN dnf5 install -y \
+    distrobox \
+    && dnf5 clean all
