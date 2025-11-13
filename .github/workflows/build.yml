@@ -22,9 +22,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_push:
-    name: Build and push images
+  build:
+    name: Build and push (${{ matrix.variant }})
     runs-on: ubuntu-24.04
+    strategy:
+      max-parallel: 1 # Build sequentially, not in parallel
+      matrix:
+        variant:
+          - base
+          - base-nvidia
+          - base-nvidia-open
+          - gnome
+          - gnome-nvidia
+          - gnome-nvidia-open
 
     permissions:
       contents: read
@@ -40,11 +50,11 @@ jobs:
         with:
           remove-codeql: true
 
-      - name: Build all variants
+      - name: Build ${{ matrix.variant }} variant
         id: build
         run: |
-          # Build all images using our build script
-          REGISTRY=${{ env.IMAGE_REGISTRY }} ./build.sh
+          # Build specific variant using our build script
+          REGISTRY=${{ env.IMAGE_REGISTRY }} ./build.sh ${{ matrix.variant }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
