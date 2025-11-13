@@ -2,8 +2,11 @@
 FROM scratch AS ctx
 COPY build_files /
 
-# Base Image - Silverblue with NVIDIA drivers
-FROM ghcr.io/ublue-os/silverblue-nvidia:stable
+# Get NVIDIA akmods
+FROM ghcr.io/ublue-os/akmods-nvidia-open:coreos-stable-43 AS akmods
+
+# Base Image - Bare Fedora bootc (build everything from scratch)
+FROM quay.io/fedora/fedora-bootc:43
 
 # Build argument to control which variant to build
 ARG VARIANT=base
@@ -27,6 +30,9 @@ ARG VARIANT=base
 ## by the package manager.
 
 # RUN rm /opt && mkdir /opt
+
+### COPY NVIDIA AKMODS
+COPY --from=akmods /rpms /tmp/akmods-rpms
 
 ### MODIFICATIONS
 ## make modifications desired in your image and install packages by modifying the build scripts
