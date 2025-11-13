@@ -1,43 +1,74 @@
-# Allow build scripts to be referenced without being copied into the final image
+# PureBlue OS - Built from Fedora bootc base
+# A clean, minimal GNOME desktop with NVIDIA drivers
+
+# Stage 0: Build context for scripts
 FROM scratch AS ctx
 COPY build_files /
 
-# Base Image - Bluefin with NVIDIA drivers already configured
-FROM ghcr.io/ublue-os/bluefin-nvidia-open:stable
+# Stage 1: Get akmods RPMs (NVIDIA drivers + kernel modules)
+FROM ghcr.io/ublue-os/akmods-nvidia-open:main-42 AS akmods-nvidia
 
-# Build argument to control which variant to build
+# Stage 2: Get common akmods (might have nvidia-kmod-common)
+FROM ghcr.io/ublue-os/akmods:main-42 AS akmods-common
+
+# Stage 3: Main build - Fedora bootc base
+FROM quay.io/fedora/fedora-bootc:42
+
+ARG FEDORA_MAJOR_VERSION=42
 ARG VARIANT=base
 
-## Other possible base images include:
-# FROM ghcr.io/ublue-os/bazzite:latest
-# FROM ghcr.io/ublue-os/bluefin-nvidia:stable
-# 
-# ... and so on, here are more base images
-# Universal Blue Images: https://github.com/orgs/ublue-os/packages
-# Fedora base image: quay.io/fedora/fedora-bootc:41
-# CentOS base images: quay.io/centos-bootc/centos-bootc:stream10
+# Make /opt mutable for packages like Chrome, Docker Desktop
+RUN test -L /opt || { rmdir /opt && ln -s /var/opt /opt; } && \
+    mkdir -p /var/roothome /var/opt
 
-### [IM]MUTABLE /opt
-## Some bootable images, like Fedora, have /opt symlinked to /var/opt, in order to
-## make it mutable/writable for users. However, some packages write files to this directory,
-## thus its contents might be wiped out when bootc deploys an image, making it troublesome for
-## some packages. Eg, google-chrome, docker-desktop.
-##
-## Uncomment the following line if one desires to make /opt immutable and be able to be used
-## by the package manager.
+# Copy entire akmods filesystem (contains RPMs at /tmp/rpms)
+COPY --from=akmods-nvidia / /tmp/akmods-nvidia
+COPY --from=akmods-common / /tmp/akmods-common
 
-# RUN rm /opt && mkdir /opt
+# Debug: Check what RPMs we have and what's in nvidia-vars
+RUN find /tmp/akmods-nvidia -name "*.rpm" && \
+    find /tmp/akmods-common -name "*nvidia*" && \
+    if [ -f /tmp/akmods-nvidia/rpms/kmods/nvidia-vars ]; then cat /tmp/akmods-nvidia/rpms/kmods/nvidia-vars; fi
 
-### MODIFICATIONS
-## make modifications desired in your image and install packages by modifying the build scripts
-## the following RUN directive does all the things required to run the variant build script
+# Install matching kernel from akmods (required for kmod compatibility)
+RUN dnf5 install -y \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-[0-9]*.rpm \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-core-*.rpm \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-*.rpm \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-core-*.rpm \
+    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-extra-*.rpm
+
+# Install NVIDIA support packages (this creates nvidia repos)
+RUN dnf5 install -y \
+    /tmp/akmods-nvidia/rpms/ublue-os/ublue-os-nvidia-addons-*.rpm \
+    /tmp/akmods-common/rpms/ublue-os/ublue-os-akmods-addons-*.rpm || true
+
+# Check what repos were created and enable them
+RUN ls -la /etc/yum.repos.d/ && \
+    find /etc/yum.repos.d/ -name "*nvidia*" -exec sed -i 's/enabled=0/enabled=1/g' {} \; || true
+
+# Install NVIDIA drivers from repos (this provides nvidia-kmod-common)
+RUN dnf5 install -y \
+    nvidia-driver \
+    nvidia-driver-cuda \
+    nvidia-settings || \
+    echo "NVIDIA packages not found in repos, will install kmod directly"
+
+# Now install the kernel module (nvidia-kmod-common should be satisfied)
+RUN dnf5 install -y \
+    /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia-*.rpm \
+    && rm -rf /tmp/akmods-nvidia /tmp/akmods-common
+
+# Install GNOME Desktop Environment
+RUN dnf5 install -y \
+    @workstation-product-environment \
+    && dnf5 clean all
+
+# Enable GDM (GNOME Display Manager) for graphical login
+RUN systemctl enable gdm.service
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
     bash /ctx/${VARIANT}.sh
-    
-### LINTING
-## Verify final image and contents are correct.
-# RUN bootc container lint
