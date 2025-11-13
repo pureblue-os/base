@@ -26,6 +26,6 @@ dnf5 install -y tmux
 systemctl enable podman.socket
 
 ### Run cleanup script to remove unwanted packages
-source ./cleanup.sh
+/ctx/cleanup.sh
 
 echo "==> Base variant build complete"

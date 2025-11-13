@@ -4,16 +4,10 @@ set -ouex pipefail
 
 echo "==> Removing unwanted packages from Bazzite"
 
-# Remove gaming applications
-dnf5 remove -y \
-    steam \
-    lutris \
-    sunshine \
-    input-remapper \
-    bazzite-portal-setup \
-    rom-properties \
-    webapp-manager \
-    firefox || true
+# Remove gaming applications one by one to avoid failures if package doesn't exist
+for pkg in steam lutris sunshine input-remapper bazzite-portal-setup rom-properties webapp-manager firefox; do
+    dnf5 remove -y "$pkg" 2>/dev/null || echo "Package $pkg not found, skipping"
+done
 
 # Remove desktop shortcuts and folders
 rm -rf /usr/share/applications/ublue-*.desktop || true
