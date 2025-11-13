@@ -38,10 +38,36 @@ rm -f /usr/etc/profile.d/ublue-fastfetch.sh
 rm -f /usr/etc/profile.d/ublue-motd.sh
 rm -f /usr/share/fish/vendor_conf.d/ublue-fastfetch.fish
 rm -f /usr/share/fish/vendor_conf.d/ublue-motd.fish
+rm -f /usr/libexec/ublue-motd
+
+# Remove Bluefin fastfetch config and logos
+rm -rf /usr/share/ublue-os/bluefin-logos
+rm -rf /usr/share/ublue-os/motd
+rm -f /usr/etc/ublue-os/fastfetch.json
+rm -f /usr/share/ublue-os/fastfetch.jsonc
+
+# Create minimal fastfetch config (uses default Fedora logo)
+mkdir -p /usr/etc/ublue-os
+cat > /usr/etc/ublue-os/fastfetch.json <<'EOF'
+{}
+EOF
 
 # Remove ublue/bluefin desktop shortcuts
 rm -f /usr/share/applications/documentation.desktop
 rm -f /usr/share/applications/discourse.desktop
+
+# Replace system-update desktop file with clean version
+rm -f /usr/share/applications/system-update.desktop
+cat > /usr/share/applications/system-update.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=System Update
+Comment=Update system, Flatpaks, Distrobox containers, and more
+Icon=system-software-update
+Categories=System;Utility;
+Terminal=true
+Exec=/usr/bin/ujust update
+EOF
 
 # Rebuild dconf database
 if command -v dconf >/dev/null; then
