@@ -129,15 +129,22 @@ dnf5 remove -y ujust || true
 rm -rf /usr/share/ublue-os/just
 rm -f /usr/bin/ujust /usr/sbin/ujust
 
-# Remove bluefin-plymouth first (safe to remove, doesn't break dependencies)
-dnf5 remove -y bluefin-plymouth || true
+# Remove most Bluefin branding packages (but NOT bluefin-logos yet)
+dnf5 remove -y \
+    bluefin-plymouth \
+    bluefin-backgrounds \
+    bluefin-cli-logos \
+    bluefin-faces \
+    bluefin-fastfetch \
+    bluefin-schemas \
+    || true
 
 # Replace bluefin-logos with fedora-logos
 # This works because both provide 'system-logos' which GDM requires
-# --allowerasing allows replacing bluefin-logos with fedora-logos
+# --allowerasing allows replacing bluefin-logos with fedora-logos atomically
 dnf5 install -y --allowerasing fedora-logos plymouth-theme-spinner
 
-# Ensure bluefin-logos is removed (--allowerasing should have done this already)
+# NOW remove bluefin-logos (should already be gone from --allowerasing, but just to be sure)
 dnf5 remove -y bluefin-logos || true
 
 # Remove any lingering Bluefin-branded Plymouth/pixmap files that might not have been replaced
