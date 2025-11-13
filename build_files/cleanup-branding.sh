@@ -48,8 +48,9 @@ rm -f /usr/share/pixmaps/ublue-update.svg
 # Remove Bluefin user avatar faces
 rm -rf /usr/share/pixmaps/faces
 
-# Swap bluefin-logos for real fedora-logos package (this removes all fake "fedora" branding)
-dnf5 swap -y bluefin-logos fedora-logos || dnf5 install -y fedora-logos
+# Remove bluefin-logos and bluefin-plymouth packages, then install real fedora-logos
+dnf5 remove -y bluefin-logos bluefin-plymouth || true
+dnf5 install -y fedora-logos
 
 # Replace Plymouth watermark with real Fedora logo (do this AFTER installing fedora-logos)
 rm -f /usr/share/plymouth/themes/spinner/silverblue-watermark.png
