@@ -5,9 +5,9 @@ set -ouex pipefail
 echo "==> Building base variant"
 
 # Install base packages
-/ctx/packages.sh
+bash /ctx/packages.sh
 
 # Install ASUS laptop support (comment out if you don't have ASUS laptop)
-/ctx/asus.sh
+bash /ctx/asus.sh
 
 echo "==> Base variant build complete"
