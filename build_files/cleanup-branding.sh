@@ -37,6 +37,10 @@ rm -f /usr/etc/profile.d/ublue-motd.sh
 rm -f /usr/share/fish/vendor_conf.d/ublue-fastfetch.fish
 rm -f /usr/share/fish/vendor_conf.d/ublue-motd.fish
 
+# Remove ublue/bluefin desktop shortcuts
+rm -f /usr/share/applications/documentation.desktop
+rm -f /usr/share/applications/discourse.desktop
+
 # Rebuild dconf database
 if command -v dconf >/dev/null; then
     dconf update || true

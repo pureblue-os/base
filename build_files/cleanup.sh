@@ -8,3 +8,10 @@ echo "==> Removing all system GNOME extensions"
 rm -rf /usr/share/gnome-shell/extensions/*
 
 echo "==> All system GNOME extensions removed"
+
+echo "==> Removing unwanted packages"
+
+# Remove Input Remapper and Tweaks
+dnf5 remove -y input-remapper gnome-tweaks
+
+echo "==> Unwanted packages removed"
