@@ -6,6 +6,8 @@ echo "==> Removing Bluefin/ublue branding"
 
 # Remove Bluefin backgrounds
 rm -rf /usr/share/backgrounds/bluefin
+rm -rf /usr/share/backgrounds/gnome
+rm -rf /usr/share/backgrounds/f42
 rm -rf /usr/etc/bazaar/*bluefin*.jxl
 
 # Remove Bluefin dconf settings
