@@ -1,20 +1,26 @@
 # PureBlue OS - Built from Fedora bootc base
 # A clean, minimal GNOME desktop with NVIDIA drivers
 
+# Accept Fedora version as build arg (workflow can pass this, defaults to 42)
+ARG FEDORA_VERSION=42
+
 # Stage 0: Build context for scripts
 FROM scratch AS ctx
 COPY build_files /
 
-# Stage 1: Get akmods RPMs (NVIDIA drivers + kernel modules)
-FROM ghcr.io/ublue-os/akmods-nvidia-open:main-42 AS akmods-nvidia
+# Stage 1: Fedora bootc base
+FROM quay.io/fedora/fedora-bootc:${FEDORA_VERSION} AS fedora-base
 
-# Stage 2: Get common akmods (might have nvidia-kmod-common)
-FROM ghcr.io/ublue-os/akmods:main-42 AS akmods-common
+# Stage 2: Get akmods RPMs (NVIDIA drivers + kernel modules)
+FROM ghcr.io/ublue-os/akmods-nvidia-open:main-${FEDORA_VERSION} AS akmods-nvidia
 
-# Stage 3: Main build - Fedora bootc base
-FROM quay.io/fedora/fedora-bootc:42
+# Stage 3: Get common akmods
+FROM ghcr.io/ublue-os/akmods:main-${FEDORA_VERSION} AS akmods-common
 
-ARG FEDORA_MAJOR_VERSION=42
+# Stage 4: Main build
+FROM fedora-base
+
+ARG FEDORA_VERSION=42
 ARG VARIANT=base
 
 # Make /opt mutable for packages like Chrome, Docker Desktop
