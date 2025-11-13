@@ -140,4 +140,49 @@ dnf5 install -y --allowerasing fedora-logos plymouth-theme-spinner
 # Ensure bluefin-logos is removed (--allowerasing should have done this already)
 dnf5 remove -y bluefin-logos || true
 
+# Remove any lingering Bluefin-branded Plymouth/pixmap files that might not have been replaced
+rm -f /usr/share/plymouth/themes/bgrt/watermark.png
+rm -f /usr/share/plymouth/themes/spinner/watermark.png
+
+# Ensure Plymouth watermark is the Fedora logo (fedora-logos should have installed this already)
+# This is just a safety check in case the file didn't get replaced properly
+if [ -f /usr/share/pixmaps/fedora-gdm-logo.png ]; then
+    mkdir -p /usr/share/plymouth/themes/spinner
+    cp -f /usr/share/pixmaps/fedora-gdm-logo.png /usr/share/plymouth/themes/spinner/watermark.png
+fi
+
+# Replace os-release file with PureBlue branding
+# Extract values from Fedora release files
+FEDORA_VERSION=$(rpm -q --qf '%{VERSION}' fedora-release-common)
+FEDORA_CODENAME=$(cat /usr/lib/fedora-release | sed 's/Fedora release [0-9]* (\(.*\))/\1/')
+SUPPORT_END=$(rpm -q --qf '%{VERSION}' fedora-release-common | awk '{print 2026"-05-13"}')  # Fedora 42 support end
+BUILD_DATE=$(date +%Y%m%d)
+
+cat > /usr/lib/os-release <<EOF
+NAME="PureBlue"
+VERSION="${FEDORA_VERSION} (Silverblue)"
+RELEASE_TYPE=stable
+ID=pureblue
+ID_LIKE="fedora"
+VERSION_ID=${FEDORA_VERSION}
+VERSION_CODENAME="${FEDORA_CODENAME}"
+PLATFORM_ID="platform:f${FEDORA_VERSION}"
+PRETTY_NAME="PureBlue ${FEDORA_VERSION}"
+ANSI_COLOR="0;38;2;60;110;180"
+LOGO=fedora-logo-icon
+CPE_NAME="cpe:/o:fedoraproject:fedora:${FEDORA_VERSION}"
+DEFAULT_HOSTNAME="pureblue"
+HOME_URL="https://github.com/pureblue-os"
+DOCUMENTATION_URL="https://github.com/pureblue-os/base"
+SUPPORT_URL="https://github.com/pureblue-os/base/issues"
+BUG_REPORT_URL="https://github.com/pureblue-os/base/issues"
+SUPPORT_END=${SUPPORT_END}
+VARIANT="Silverblue"
+VARIANT_ID=pureblue-nvidia-open
+OSTREE_VERSION='${FEDORA_VERSION}.${BUILD_DATE}'
+BUILD_ID="${BUILD_DATE}"
+IMAGE_ID="pureblue-nvidia-open"
+IMAGE_VERSION="${FEDORA_VERSION}.${BUILD_DATE}"
+EOF
+
 echo "Bluefin branding cleanup complete"
