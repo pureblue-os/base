@@ -21,6 +21,10 @@ FROM ghcr.io/ublue-os/akmods:main-${FEDORA_VERSION} AS akmods-common
 # Stage 4: Main build
 FROM fedora-base
 
+# Re-declare build args for this stage
+ARG FEDORA_VERSION=42
+ARG VARIANT=base
+
 # Make /opt mutable for packages like Chrome, Docker Desktop
 RUN test -L /opt || { rmdir /opt && ln -s /var/opt /opt; } && \
     mkdir -p /var/roothome /var/opt
