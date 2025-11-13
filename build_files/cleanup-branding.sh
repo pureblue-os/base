@@ -45,6 +45,17 @@ rm -f /usr/share/pixmaps/ublue-discourse.svg
 rm -f /usr/share/pixmaps/ublue-docs.svg
 rm -f /usr/share/pixmaps/ublue-update.svg
 
+# Remove Bluefin user avatar faces
+rm -rf /usr/share/pixmaps/faces
+
+# Swap bluefin-logos for real fedora-logos package (this removes all fake "fedora" branding)
+dnf5 swap -y bluefin-logos fedora-logos || dnf5 install -y fedora-logos
+
+# Replace Plymouth watermark with real Fedora logo (do this AFTER installing fedora-logos)
+rm -f /usr/share/plymouth/themes/spinner/silverblue-watermark.png
+rm -f /usr/share/plymouth/themes/spinner/watermark.png
+cp /usr/share/pixmaps/fedora_whitelogo_med.png /usr/share/plymouth/themes/spinner/watermark.png
+
 # Remove ublue logos from GNOME extensions
 rm -f /usr/share/gnome-shell/extensions/logomenu@aryan_k/Resources/ublue-logo-symbolic.svg
 rm -f /usr/share/gnome-shell/extensions/logomenu@aryan_k/Resources/ublue-logo.svg
@@ -58,13 +69,13 @@ rm -f /usr/lib/bootc/install/20-bluefin.toml
 # Remove ublue fastfetch and motd scripts
 rm -f /usr/etc/profile.d/ublue-fastfetch.sh
 rm -f /usr/etc/profile.d/ublue-motd.sh
+rm -f /etc/profile.d/ublue-fastfetch.sh
+rm -f /etc/profile.d/ublue-motd.sh
 rm -f /usr/share/fish/vendor_conf.d/ublue-fastfetch.fish
 rm -f /usr/share/fish/vendor_conf.d/ublue-motd.fish
 rm -f /usr/libexec/ublue-motd
 rm -f /usr/libexec/ublue-fastfetch
 rm -f /usr/libexec/ublue-bling-fastfetch
-rm -f /usr/libexec/ublue-bling
-rm -f /usr/libexec/ublue-changelog
 rm -f /usr/libexec/ublue-image-info.sh
 
 # Remove useless ublue tools
@@ -102,10 +113,6 @@ fi
 if command -v plymouth-set-default-theme >/dev/null; then
     plymouth-set-default-theme bgrt || plymouth-set-default-theme spinner
 fi
-
-# Replace watermark in Plymouth spinner theme with Fedora logo
-rm -f /usr/share/plymouth/themes/spinner/silverblue-watermark.png
-cp /usr/share/pixmaps/fedora_whitelogo_med.png /usr/share/plymouth/themes/spinner/watermark.png
 
 # Remove ublue executables
 rm -f /usr/libexec/ublue-bling
