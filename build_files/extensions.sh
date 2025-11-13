@@ -53,4 +53,15 @@ install_extension "clipboard-indicator@tudmotu.com"
 install_extension "boostvolume@shaquib.dev"
 install_extension "volume_scroller@francislavoie.github.io"
 
+# Fix permissions on extension files
+chmod -R a+r /usr/share/gnome-shell/extensions/
+find /usr/share/gnome-shell/extensions/ -type d -exec chmod a+rx {} \;
+
+# Compile schemas for extensions that have them
+for ext_dir in /usr/share/gnome-shell/extensions/*/; do
+    if [ -d "${ext_dir}schemas" ]; then
+        glib-compile-schemas "${ext_dir}schemas/"
+    fi
+done
+
 echo "==> GNOME extensions installation complete"
