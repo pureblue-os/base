@@ -46,12 +46,6 @@ rm -rf /usr/share/ublue-os/motd
 rm -f /usr/etc/ublue-os/fastfetch.json
 rm -f /usr/share/ublue-os/fastfetch.jsonc
 
-# Create minimal fastfetch config (uses default Fedora logo)
-mkdir -p /usr/etc/ublue-os
-cat > /usr/etc/ublue-os/fastfetch.json <<'EOF'
-{}
-EOF
-
 # Remove ublue/bluefin desktop shortcuts
 rm -f /usr/share/applications/documentation.desktop
 rm -f /usr/share/applications/discourse.desktop
