@@ -48,10 +48,6 @@ rm -f /usr/share/pixmaps/ublue-update.svg
 # Remove Bluefin user avatar faces
 rm -rf /usr/share/pixmaps/faces
 
-# Remove bluefin-logos and bluefin-plymouth packages, then install real Fedora ones
-dnf5 remove -y bluefin-logos bluefin-plymouth || true
-dnf5 install -y fedora-logos plymouth-theme-spinner
-
 # Remove ublue logos from GNOME extensions
 rm -f /usr/share/gnome-shell/extensions/logomenu@aryan_k/Resources/ublue-logo-symbolic.svg
 rm -f /usr/share/gnome-shell/extensions/logomenu@aryan_k/Resources/ublue-logo.svg
@@ -132,5 +128,16 @@ systemctl disable flatpak-preinstall.service || true
 dnf5 remove -y ujust || true
 rm -rf /usr/share/ublue-os/just
 rm -f /usr/bin/ujust /usr/sbin/ujust
+
+# Remove bluefin-plymouth first (safe to remove, doesn't break dependencies)
+dnf5 remove -y bluefin-plymouth || true
+
+# Replace bluefin-logos with fedora-logos
+# This works because both provide 'system-logos' which GDM requires
+# --allowerasing allows replacing bluefin-logos with fedora-logos
+dnf5 install -y --allowerasing fedora-logos plymouth-theme-spinner
+
+# Ensure bluefin-logos is removed (--allowerasing should have done this already)
+dnf5 remove -y bluefin-logos || true
 
 echo "Bluefin branding cleanup complete"
