@@ -2,6 +2,8 @@
 
 set -ouex pipefail
 
+echo "==> Building base variant"
+
 ### Install packages
 
 # Packages can be installed from any enabled yum repo on the image.
@@ -22,3 +24,8 @@ dnf5 install -y tmux
 #### Example for enabling a System Unit File
 
 systemctl enable podman.socket
+
+### Run cleanup script to remove unwanted packages
+source ./cleanup.sh
+
+echo "==> Base variant build complete"
