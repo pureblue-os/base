@@ -1,4 +1,4 @@
-# PureBlue OS GNOME
+# Pureblue OS GNOME
 # Base image with GNOME Desktop Environment
 
 ARG REGISTRY

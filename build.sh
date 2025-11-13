@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Build script for PureBlue OS base images
+# Build script for Pureblue OS base images
 # Can be used locally or in CI
 
 # Detect Fedora version from latest bootc image

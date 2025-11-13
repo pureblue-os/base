@@ -1,4 +1,4 @@
-# PureBlue OS Base
+# Pureblue OS Base
 # Plain Fedora bootc with minimal setup
 
 ARG FEDORA_VERSION

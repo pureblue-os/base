@@ -1,4 +1,4 @@
-# PureBlue OS Base - NVIDIA
+# Pureblue OS Base - NVIDIA
 # Base image with NVIDIA proprietary drivers
 
 ARG FEDORA_VERSION

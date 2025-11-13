@@ -1,4 +1,4 @@
-# PureBlue OS GNOME - NVIDIA Open
+# Pureblue OS GNOME - NVIDIA Open
 # Base NVIDIA Open image with GNOME Desktop Environment
 
 ARG REGISTRY
