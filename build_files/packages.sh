@@ -2,18 +2,15 @@
 
 set -ouex pipefail
 
-echo "==> Installing GNOME Workstation"
+echo "==> Customizing PureBlue"
 
-# Install GNOME Workstation Environment
-dnf5 install -y @workstation-product-environment
-
-echo "==> Installing additional packages"
+# Remove unwanted Bluefin packages here if needed
+# dnf5 remove -y <package>
 
 # Install your custom packages here
 dnf5 install -y tmux
 
 # Enable system services
 systemctl enable podman.socket
-systemctl enable gdm
 
-echo "==> Packages installed"
+echo "==> PureBlue customization complete"

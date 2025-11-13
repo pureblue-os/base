@@ -2,11 +2,8 @@
 FROM scratch AS ctx
 COPY build_files /
 
-# Get NVIDIA open akmods
-FROM ghcr.io/ublue-os/akmods-nvidia-open:coreos-stable-43 AS akmods
-
-# Base Image - Bare Fedora bootc (build everything from scratch)
-FROM quay.io/fedora/fedora-bootc:43
+# Base Image - Bluefin with NVIDIA drivers already configured
+FROM ghcr.io/ublue-os/bluefin-nvidia-open:stable
 
 # Build argument to control which variant to build
 ARG VARIANT=base
@@ -30,13 +27,6 @@ ARG VARIANT=base
 ## by the package manager.
 
 # RUN rm /opt && mkdir /opt
-
-### COPY NVIDIA AKMODS
-COPY --from=akmods /rpms /tmp/akmods-rpms
-
-# Install NVIDIA open drivers (ublue support package + kmod)
-RUN dnf install -y /tmp/akmods-rpms/ublue-os/ublue-os-nvidia*.rpm
-RUN dnf install -y /tmp/akmods-rpms/kmods/kmod-nvidia*.rpm
 
 ### MODIFICATIONS
 ## make modifications desired in your image and install packages by modifying the build scripts
