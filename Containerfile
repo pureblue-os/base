@@ -2,8 +2,8 @@
 FROM scratch AS ctx
 COPY build_files /
 
-# Base Image
-FROM ghcr.io/ublue-os/bazzite-gnome-asus-nvidia-open:stable
+# Base Image - Silverblue with NVIDIA drivers
+FROM ghcr.io/ublue-os/silverblue-nvidia:stable
 
 # Build argument to control which variant to build
 ARG VARIANT=base
@@ -36,6 +36,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
+    chmod +x /ctx/*.sh && \
     /ctx/${VARIANT}.sh
     
 ### LINTING
