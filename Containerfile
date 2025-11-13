@@ -34,9 +34,8 @@ ARG VARIANT=base
 ### COPY NVIDIA AKMODS
 COPY --from=akmods /rpms /tmp/rpms
 
-# Install NVIDIA drivers from akmods
-RUN dnf5 install -y /tmp/rpms/ublue-os/*.rpm
-RUN dnf5 install -y /tmp/rpms/kmods/*.rpm
+# Install NVIDIA drivers from akmods (install both together to resolve dependencies)
+RUN dnf5 install -y /tmp/rpms/ublue-os/*.rpm /tmp/rpms/kmods/*.rpm
 
 ### MODIFICATIONS
 ## make modifications desired in your image and install packages by modifying the build scripts
