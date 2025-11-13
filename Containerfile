@@ -2,8 +2,7 @@
 # A clean, minimal GNOME desktop with NVIDIA drivers
 
 # Accept Fedora version as build arg (workflow can pass this, defaults to 42)
-ARG FEDORA_VERSION=42
-ARG VARIANT=base
+ARG FEDORA_VERSION=43
 
 # Stage 0: Build context for scripts
 FROM scratch AS ctx
@@ -22,7 +21,7 @@ FROM ghcr.io/ublue-os/akmods:main-${FEDORA_VERSION} AS akmods-common
 FROM fedora-base
 
 # Re-declare build args for this stage
-ARG FEDORA_VERSION=42
+ARG FEDORA_VERSION=43
 ARG VARIANT=base
 
 # Make /opt mutable for packages like Chrome, Docker Desktop
