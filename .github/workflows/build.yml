@@ -58,12 +58,18 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push all built images
+        id: push
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
-          # Push all built images
+          # Push all built images and collect digests
+          DIGESTS=""
           for image in ${{ steps.build.outputs.images }}; do
-            podman push ${image}
+            digest=$(podman push ${image} --format=json | jq -r '.Digest')
+            # Store image@digest for signing
+            registry_path=$(echo ${image} | cut -d: -f1)
+            DIGESTS="${DIGESTS} ${registry_path}@${digest}"
           done
+          echo "digests=${DIGESTS}" >> $GITHUB_OUTPUT
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
@@ -72,9 +78,9 @@ jobs:
       - name: Sign container images
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
-          # Sign all built images
-          for image in ${{ steps.build.outputs.images }}; do
-            cosign sign -y --key env://COSIGN_PRIVATE_KEY ${image}
+          # Sign all images by digest (immutable)
+          for digest in ${{ steps.push.outputs.digests }}; do
+            cosign sign -y --key env://COSIGN_PRIVATE_KEY ${digest}
           done
         env:
           COSIGN_EXPERIMENTAL: false
