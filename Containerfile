@@ -32,7 +32,7 @@ ARG VARIANT=base
 # RUN rm /opt && mkdir /opt
 
 ### COPY NVIDIA AKMODS
-COPY --from=akmods /rpms /tmp/akmods-rpms
+COPY --from=akmods /rpms /tmp/rpms
 
 ### MODIFICATIONS
 ## make modifications desired in your image and install packages by modifying the build scripts
