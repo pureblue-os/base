@@ -151,10 +151,12 @@ dnf5 remove -y bluefin-logos || true
 rm -f /usr/share/plymouth/themes/bgrt/watermark.png
 rm -f /usr/share/plymouth/themes/spinner/watermark.png
 
-# Ensure Plymouth watermark is the Fedora logo (fedora-logos should have installed this already)
-# This is just a safety check in case the file didn't get replaced properly
+# Ensure Plymouth watermark is the Fedora logo for both bgrt and spinner themes
+# bgrt is the default theme used on UEFI systems
 if [ -f /usr/share/pixmaps/fedora-gdm-logo.png ]; then
+    mkdir -p /usr/share/plymouth/themes/bgrt
     mkdir -p /usr/share/plymouth/themes/spinner
+    cp -f /usr/share/pixmaps/fedora-gdm-logo.png /usr/share/plymouth/themes/bgrt/watermark.png
     cp -f /usr/share/pixmaps/fedora-gdm-logo.png /usr/share/plymouth/themes/spinner/watermark.png
 fi
 
