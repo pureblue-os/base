@@ -61,9 +61,12 @@ jobs:
           # Push all built images and collect digests
           DIGESTS=""
           for image in ${{ steps.build.outputs.images }}; do
-            digest=$(podman push ${image} --format=json | jq -r '.Digest')
+            echo "Pushing ${image}..."
+            output=$(podman push ${image} --digestfile=/tmp/digest.txt 2>&1)
+            digest=$(cat /tmp/digest.txt)
             # Store image@digest for signing
             registry_path=$(echo ${image} | cut -d: -f1)
+            echo "Digest: ${registry_path}@${digest}"
             DIGESTS="${DIGESTS} ${registry_path}@${digest}"
           done
           echo "digests=${DIGESTS}" >> $GITHUB_OUTPUT
