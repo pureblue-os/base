@@ -34,6 +34,9 @@ ARG VARIANT=base
 ### COPY NVIDIA AKMODS
 COPY --from=akmods /rpms /tmp/rpms
 
+# Debug: List what we copied
+RUN find /tmp/rpms -type f
+
 ### MODIFICATIONS
 ## make modifications desired in your image and install packages by modifying the build scripts
 ## the following RUN directive does all the things required to run the variant build script
