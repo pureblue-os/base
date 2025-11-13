@@ -2,11 +2,8 @@
 FROM scratch AS ctx
 COPY build_files /
 
-# Get base akmods (includes nvidia-kmod-common)
-FROM ghcr.io/ublue-os/akmods:coreos-stable-43 AS akmods-base
-
 # Get NVIDIA open akmods
-FROM ghcr.io/ublue-os/akmods-nvidia-open:coreos-stable-43 AS akmods-nvidia
+FROM ghcr.io/ublue-os/akmods-nvidia-open:coreos-stable-43 AS akmods
 
 # Base Image - Bare Fedora bootc (build everything from scratch)
 FROM quay.io/fedora/fedora-bootc:43
@@ -34,16 +31,12 @@ ARG VARIANT=base
 
 # RUN rm /opt && mkdir /opt
 
-### COPY AKMODS
-COPY --from=akmods-base /rpms /tmp/rpms-base
-COPY --from=akmods-nvidia /rpms /tmp/rpms-nvidia
+### COPY NVIDIA AKMODS
+COPY --from=akmods /rpms /tmp/akmods-rpms
 
-# Install base akmods first (includes nvidia-kmod-common)
-RUN dnf5 install -y /tmp/rpms-base/ublue-os/*.rpm
-
-# Install NVIDIA open drivers
-RUN dnf5 install -y /tmp/rpms-nvidia/ublue-os/*.rpm
-RUN dnf5 install -y /tmp/rpms-nvidia/kmods/*.rpm
+# Install NVIDIA open drivers (ublue support package + kmod)
+RUN dnf install -y /tmp/akmods-rpms/ublue-os/ublue-os-nvidia*.rpm
+RUN dnf install -y /tmp/akmods-rpms/kmods/kmod-nvidia*.rpm
 
 ### MODIFICATIONS
 ## make modifications desired in your image and install packages by modifying the build scripts
