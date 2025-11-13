@@ -3,6 +3,7 @@
 
 # Accept Fedora version as build arg (workflow can pass this, defaults to 42)
 ARG FEDORA_VERSION=42
+ARG VARIANT=base
 
 # Stage 0: Build context for scripts
 FROM scratch AS ctx
@@ -19,9 +20,6 @@ FROM ghcr.io/ublue-os/akmods:main-${FEDORA_VERSION} AS akmods-common
 
 # Stage 4: Main build
 FROM fedora-base
-
-ARG FEDORA_VERSION=42
-ARG VARIANT=base
 
 # Make /opt mutable for packages like Chrome, Docker Desktop
 RUN test -L /opt || { rmdir /opt && ln -s /var/opt /opt; } && \
