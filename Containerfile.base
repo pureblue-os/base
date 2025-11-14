@@ -21,4 +21,5 @@ RUN systemd-sysusers
 
 # Mask services that don't work with bootc's immutable/overlay filesystem
 RUN systemctl mask \
-    systemd-remount-fs.service
+    systemd-remount-fs.service \
+    systemd-sysusers.service
