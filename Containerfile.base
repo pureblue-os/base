@@ -2,16 +2,39 @@
 # Plain Fedora bootc with minimal setup
 
 ARG FEDORA_VERSION
-
 FROM quay.io/fedora/fedora-bootc:${FEDORA_VERSION}
 
-# Make /opt mutable for packages like Chrome, Docker Desktop
-# NOTE: Most apps should be installed via Flatpak or in distrobox
-# This is mainly for enterprise/proprietary software that requires /opt
-# RUN test -L /opt || { rmdir /opt && ln -s /var/opt /opt; } && \
-#     mkdir -p /var/roothome /var/opt
+#
+# --- bootc stability fixes ---
+#
+
+# prevent rpm-ostree from taking OSTree sysroot lock
+RUN systemctl disable --now rpm-ostreed.service rpm-ostreed.socket || true \
+ && systemctl mask rpm-ostreed.service rpm-ostreed.socket || true
+
+# required for bootc container builds
+# prevents sysusers from running during build and breaking boot
+ENV SYSTEMD_OFFLINE=1
+
+# ensure bootc automatic updates work correctly
+RUN systemctl enable bootc-fetch-apply-updates.service \
+ && systemctl enable bootc-fetch-apply-updates.timer
+
+# ensure basic boot services required by bootc actually run
+RUN systemctl enable systemd-remount-fs.service systemd-sysusers.service
+
+#
+# --- end fixes ---
+#
+
 
 # Install base tooling
 RUN dnf5 install -y \
     distrobox \
+    curl \
+    unzip \
+    glib2 \
+    fuse-libs \
     && dnf5 clean all
+
+RUN systemctl enable podman.socket
