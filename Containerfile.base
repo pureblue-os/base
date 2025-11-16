@@ -38,3 +38,9 @@ RUN dnf5 install -y \
     && dnf5 clean all
 
 RUN systemctl enable podman.socket
+
+# Mask services that fail in immutable/container environments (probably, idk)
+RUN systemctl mask abrtd.service && \
+    systemctl mask rtkit-daemon.service && \
+    systemctl mask systemd-remount-fs.service && \
+    systemctl mask systemd-sysusers.service
