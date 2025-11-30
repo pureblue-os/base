@@ -34,6 +34,7 @@ RUN dnf5 install -y \
     curl \
     unzip \
     glib2 \
+    fuse \
     fuse-libs \
     && dnf5 clean all
 
