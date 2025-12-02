@@ -36,7 +36,16 @@ RUN dnf5 install -y \
     glib2 \
     fuse \
     fuse-libs \
+    fuse-common \
+    fuse3 \
+    fuse3-libs \
+    squashfuse \
+    squashfuse-libs \
     && dnf5 clean all
+
+# Ensure fusermount works for AppImages (setuid)
+RUN chmod u+s /usr/bin/fusermount3 || true \
+    && chmod u+s /usr/bin/fusermount || true
 
 RUN systemctl enable podman.socket
 
