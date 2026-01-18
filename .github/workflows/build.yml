@@ -16,14 +16,58 @@ env:
   IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/120078124?s=200&v=4" # Put your own image here for a fancy profile on https://artifacthub.io/!
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}" # do not edit
   DEFAULT_TAG: "latest"
+  BASE_IMAGE: "quay.io/fedora/fedora-bootc"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}-${{ inputs.brand_name}}-${{ inputs.stream_name }}
   cancel-in-progress: true
 
 jobs:
+  check:
+    name: Check if build needed
+    runs-on: ubuntu-24.04
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      fedora_version: ${{ steps.check.outputs.fedora_version }}
+      base_digest: ${{ steps.check.outputs.base_digest }}
+      unique_tag: ${{ steps.check.outputs.unique_tag }}
+
+    steps:
+      - name: Check for existing build
+        id: check
+        run: |
+          # Get Fedora version from base image
+          FEDORA_VERSION=$(podman run --rm ${{ env.BASE_IMAGE }}:latest grep -oP '(?<=VERSION_ID=)\d+' /usr/lib/os-release)
+          echo "Fedora version: ${FEDORA_VERSION}"
+          echo "fedora_version=${FEDORA_VERSION}" >> $GITHUB_OUTPUT
+
+          # Get base image digest (first 8 chars)
+          BASE_DIGEST=$(skopeo inspect --format '{{.Digest}}' docker://${{ env.BASE_IMAGE }}:${FEDORA_VERSION} | cut -d: -f2 | head -c 8)
+          echo "Base image digest: ${BASE_DIGEST}"
+          echo "base_digest=${BASE_DIGEST}" >> $GITHUB_OUTPUT
+
+          # Get commit SHA (first 8 chars)
+          COMMIT_SHA="${GITHUB_SHA:0:8}"
+          echo "Commit SHA: ${COMMIT_SHA}"
+
+          # Build unique tag
+          UNIQUE_TAG="${FEDORA_VERSION}.${BASE_DIGEST}.${COMMIT_SHA}"
+          echo "Unique tag: ${UNIQUE_TAG}"
+          echo "unique_tag=${UNIQUE_TAG}" >> $GITHUB_OUTPUT
+
+          # Check if this exact tag already exists (check base image as proxy)
+          if skopeo inspect "docker://${{ env.IMAGE_REGISTRY }}/base:${UNIQUE_TAG}" &>/dev/null; then
+            echo "✓ Tag ${UNIQUE_TAG} already exists. Skipping build."
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          else
+            echo "✓ Tag ${UNIQUE_TAG} not found. Build needed."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          fi
+
   build-base:
     name: Build base
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-24.04
 
     permissions:
@@ -70,7 +114,8 @@ jobs:
 
   build-nvidia:
     name: Build ${{ matrix.variant }}
-    needs: build-base
+    needs: [check, build-base]
+    if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -121,7 +166,8 @@ jobs:
 
   build-gnome:
     name: Build ${{ matrix.variant }}
-    needs: [build-base, build-nvidia]
+    needs: [check, build-base, build-nvidia]
+    if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
