@@ -54,3 +54,6 @@ RUN systemctl mask abrtd.service && \
     systemctl mask rtkit-daemon.service && \
     systemctl mask systemd-remount-fs.service && \
     systemctl mask systemd-sysusers.service
+
+# Remove psacct logrotate config (psacct service not used, but config references missing /var/account)
+RUN rm -f /etc/logrotate.d/psacct
