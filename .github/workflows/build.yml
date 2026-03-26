@@ -236,6 +236,8 @@ jobs:
 
       - name: Build gnome-nvidia
         id: build
+        env:
+          FEDORA_VERSION: ${{ needs.check.outputs.fedora_version }}
         run: REGISTRY=${{ env.IMAGE_REGISTRY }} ./build.sh gnome-nvidia
 
       - name: Login to GitHub Container Registry
@@ -284,6 +286,8 @@ jobs:
 
       - name: Build base-nvidia-open
         id: build
+        env:
+          FEDORA_VERSION: ${{ needs.check.outputs.fedora_version }}
         run: REGISTRY=${{ env.IMAGE_REGISTRY }} ./build.sh base-nvidia-open
 
       - name: Login to GitHub Container Registry
@@ -332,6 +336,8 @@ jobs:
 
       - name: Build gnome-nvidia-open
         id: build
+        env:
+          FEDORA_VERSION: ${{ needs.check.outputs.fedora_version }}
         run: REGISTRY=${{ env.IMAGE_REGISTRY }} ./build.sh gnome-nvidia-open
 
       - name: Login to GitHub Container Registry
