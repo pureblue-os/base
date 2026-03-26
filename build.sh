@@ -36,7 +36,7 @@ TAG_SUFFIXES="latest ${FEDORA_VERSION} ${PARTIAL_TAG} ${UNIQUE_TAG}"
 echo "Tags to be applied: ${TAG_SUFFIXES}"
 
 # Build all variants or specific one
-VARIANTS=${1:-"base base-nvidia-open gnome gnome-nvidia-open"}
+VARIANTS=${1:-"base base-nvidia base-nvidia-open gnome gnome-nvidia gnome-nvidia-open"}
 
 # Track all built images
 BUILT_IMAGES=""
