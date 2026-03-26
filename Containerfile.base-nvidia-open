@@ -14,8 +14,9 @@ RUN KERNEL_VERSION=$(rpm -q kernel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}'
     echo "Building for kernel: ${KERNEL_VERSION}" && \
     echo "${KERNEL_VERSION}" > /tmp/kernel-version
 
-# Add negativo17 NVIDIA repo
-RUN dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo && \
+# Add negativo17 NVIDIA repo (dnf5 compatible)
+RUN curl -Lo /etc/yum.repos.d/negativo17-fedora-nvidia.repo \
+    https://negativo17.org/repos/fedora-nvidia.repo && \
     sed -i 's/enabled=1/enabled=0/' /etc/yum.repos.d/negativo17-fedora-nvidia.repo
 
 # Install build dependencies
