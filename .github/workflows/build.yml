@@ -86,6 +86,8 @@ jobs:
 
       - name: Build base
         id: build
+        env:
+          FEDORA_VERSION: ${{ needs.check.outputs.fedora_version }}
         run: REGISTRY=${{ env.IMAGE_REGISTRY }} ./build.sh base
 
       - name: Login to GitHub Container Registry
@@ -134,6 +136,8 @@ jobs:
 
       - name: Build gnome
         id: build
+        env:
+          FEDORA_VERSION: ${{ needs.check.outputs.fedora_version }}
         run: REGISTRY=${{ env.IMAGE_REGISTRY }} ./build.sh gnome
 
       - name: Login to GitHub Container Registry
@@ -182,6 +186,8 @@ jobs:
 
       - name: Build base-nvidia
         id: build
+        env:
+          FEDORA_VERSION: ${{ needs.check.outputs.fedora_version }}
         run: REGISTRY=${{ env.IMAGE_REGISTRY }} ./build.sh base-nvidia
 
       - name: Login to GitHub Container Registry

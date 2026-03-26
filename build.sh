@@ -6,8 +6,8 @@ set -euo pipefail
 
 BASE_IMAGE="quay.io/fedora/fedora-bootc"
 
-# Detect Fedora version from latest bootc image
-FEDORA_VERSION=${FEDORA_VERSION:-$(podman run --rm ${BASE_IMAGE}:latest grep -oP '(?<=VERSION_ID=)\d+' /usr/lib/os-release)}
+# Fedora version must be provided (set by CI or passed as env var)
+FEDORA_VERSION=${FEDORA_VERSION:?required}
 echo "Building for Fedora version: ${FEDORA_VERSION}"
 
 # Get the base image digest (short SHA - first 8 chars)
