@@ -44,6 +44,20 @@ RUN dnf5 install -y \
     nvidia-settings || \
     echo "NVIDIA packages not found in repos, will install kmod directly"
 
+# Verify NVIDIA versions match before installing
+# The kmod-nvidia RPM version MUST match the nvidia-driver version from repos
+RUN KMOD_RPM=$(ls /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia-*.rpm | head -1) && \
+    KMOD_VERSION=$(rpm -qp --qf '%{VERSION}' "${KMOD_RPM}") && \
+    echo "Pre-built kmod-nvidia version from ublue-os: ${KMOD_VERSION}" && \
+    DRIVER_VERSION=$(dnf5 repoquery --qf '%{VERSION}' nvidia-driver 2>/dev/null | head -1) && \
+    echo "NVIDIA driver version in repos: ${DRIVER_VERSION}" && \
+    if [ "${KMOD_VERSION}" != "${DRIVER_VERSION}" ]; then \
+        echo "ERROR: Version mismatch! kmod-nvidia=${KMOD_VERSION}, nvidia-driver=${DRIVER_VERSION}"; \
+        echo "The ublue-os akmods-nvidia-open image has outdated pre-built modules."; \
+        echo "Options: 1) Wait for ublue-os to update, or 2) Build modules locally"; \
+        exit 1; \
+    fi
+
 # Install the kernel module (nvidia-kmod-common should be satisfied)
 RUN dnf5 install -y \
     /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia-*.rpm \
