@@ -54,6 +54,8 @@ RUN KERNEL_VERSION=$(cat /tmp/kernel-version) && \
     echo "Found NVIDIA module at: ${NVIDIA_KO}" && \
     KMOD_VERSION=$(modinfo -F version "${NVIDIA_KO}") && \
     echo "Built kmod-nvidia version: ${KMOD_VERSION}" && \
+    echo "Checking installed NVIDIA packages..." && \
+    rpm -qa | grep -i nvidia | head -20 && \
     DRIVER_VERSION=$(rpm -q --qf '%{VERSION}' nvidia-driver) && \
     echo "nvidia-driver version: ${DRIVER_VERSION}" && \
     if [ "${KMOD_VERSION}" != "${DRIVER_VERSION}" ]; then \
