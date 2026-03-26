@@ -26,12 +26,13 @@ echo "Commit SHA: ${COMMIT_SHA}"
 # Image registry (default to localhost for local dev)
 REGISTRY=${REGISTRY:-"localhost/pureblue-os"}
 
-# Build the unique tag: {fedora_version}.{base_image_sha}.{commit_sha}
-UNIQUE_TAG="${FEDORA_VERSION}.${BASE_IMAGE_DIGEST}.${COMMIT_SHA}"
-PARTIAL_TAG="${FEDORA_VERSION}.${BASE_IMAGE_DIGEST}"
+# Build the unique tag: {fedora_version}.commit-{commit_sha}.base-{base_digest}
+UNIQUE_TAG="${FEDORA_VERSION}.commit-${COMMIT_SHA}.base-${BASE_IMAGE_DIGEST}"
+PARTIAL_TAG="${FEDORA_VERSION}.base-${BASE_IMAGE_DIGEST}"
+COMMIT_TAG="${FEDORA_VERSION}.commit-${COMMIT_SHA}"
 
 # Tag suffixes to apply to each variant
-TAG_SUFFIXES="latest ${FEDORA_VERSION} ${PARTIAL_TAG} ${UNIQUE_TAG}"
+TAG_SUFFIXES="latest ${FEDORA_VERSION} ${COMMIT_TAG} ${PARTIAL_TAG} ${UNIQUE_TAG}"
 
 echo "Tags to be applied: ${TAG_SUFFIXES}"
 

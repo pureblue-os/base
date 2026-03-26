@@ -50,8 +50,8 @@ jobs:
           COMMIT_SHA="${GITHUB_SHA:0:8}"
           echo "Commit SHA: ${COMMIT_SHA}"
 
-          # Build unique tag
-          UNIQUE_TAG="${FEDORA_VERSION}.${BASE_DIGEST}.${COMMIT_SHA}"
+          # Build unique tag with new naming scheme: {fedora_version}.commit-{sha}.base-{digest}
+          UNIQUE_TAG="${FEDORA_VERSION}.commit-${COMMIT_SHA}.base-${BASE_DIGEST}"
           echo "Unique tag: ${UNIQUE_TAG}"
           echo "unique_tag=${UNIQUE_TAG}" >> $GITHUB_OUTPUT
 

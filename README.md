@@ -75,8 +75,9 @@ Images are tagged with:
 
 - `latest` - Always the most recent build
 - `{fedora_version}` - e.g., `43`
-- `{fedora_version}.{base_digest}` - e.g., `43.a1b2c3d4`
-- `{fedora_version}.{base_digest}.{commit}` - e.g., `43.a1b2c3d4.e5f6789a`
+- `{fedora_version}.commit-{sha}` - e.g., `43.commit-a1b2c3d4` (shared across variants from same commit)
+- `{fedora_version}.base-{digest}` - e.g., `43.base-e5f6789a` (same base digest)
+- `{fedora_version}.commit-{sha}.base-{digest}` - e.g., `43.commit-a1b2c3d4.base-e5f6789a` (full traceability)
 
 ## Containerfiles
 
