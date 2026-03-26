@@ -44,9 +44,7 @@ RUN dnf5 install -y \
     nvidia-settings || \
     echo "NVIDIA packages not found in repos, will install kmod directly"
 
-# Install akmod-nvidia from repos (akmods-nvidia-open image doesn't include the akmod RPM)
-RUN dnf5 install -y akmod-nvidia
-
-# Rebuild the kernel module to match the akmod version
-RUN akmods --force \
+# Install the kernel module (nvidia-kmod-common should be satisfied)
+RUN dnf5 install -y \
+    /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia-*.rpm \
     && rm -rf /tmp/akmods-nvidia /tmp/akmods-common
