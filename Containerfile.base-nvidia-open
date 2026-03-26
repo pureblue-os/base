@@ -14,14 +14,22 @@ RUN KERNEL_VERSION=$(rpm -q kernel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}'
     echo "Building for kernel: ${KERNEL_VERSION}" && \
     echo "${KERNEL_VERSION}" > /tmp/kernel-version
 
-# Add negativo17 NVIDIA repo (dnf5 compatible)
+# Add negativo17 NVIDIA repo
 RUN curl -Lo /etc/yum.repos.d/fedora-nvidia.repo \
     https://negativo17.org/repos/fedora-nvidia.repo && \
     sed -i 's/enabled=1/enabled=0/' /etc/yum.repos.d/fedora-nvidia.repo
 
-# Install build dependencies (enable negativo17 temporarily)
+# Install NVIDIA userspace packages first (needed for akmod build)
 RUN dnf5 install -y \
     --enablerepo=fedora-nvidia \
+    nvidia-driver \
+    nvidia-driver-cuda \
+    nvidia-settings \
+    nvidia-kmod-common \
+    && dnf5 clean all
+
+# Install build dependencies
+RUN dnf5 install -y \
     kernel-devel-$(cat /tmp/kernel-version) \
     akmod-nvidia \
     gcc \
@@ -39,24 +47,13 @@ RUN KERNEL_VERSION=$(cat /tmp/kernel-version) && \
 RUN KERNEL_VERSION=$(cat /tmp/kernel-version) && \
     KMOD_VERSION=$(modinfo -F version /usr/lib/modules/"${KERNEL_VERSION}"/extra/nvidia/nvidia.ko.xz) && \
     echo "Built kmod-nvidia version: ${KMOD_VERSION}" && \
-    DRIVER_VERSION=$(dnf5 repoquery --installed --qf '%{VERSION}' nvidia-driver) && \
+    DRIVER_VERSION=$(rpm -q --qf '%{VERSION}' nvidia-driver) && \
     echo "nvidia-driver version: ${DRIVER_VERSION}" && \
     if [ "${KMOD_VERSION}" != "${DRIVER_VERSION}" ]; then \
         echo "ERROR: Version mismatch! kmod=${KMOD_VERSION}, driver=${DRIVER_VERSION}"; \
         exit 1; \
     fi
 
-# Now install the rest of the NVIDIA userspace packages (enable negativo17 temporarily)
-# These must match the akmod-nvidia version we just built
-RUN dnf5 install -y \
-    --enablerepo=fedora-nvidia \
-    nvidia-driver \
-    nvidia-driver-cuda \
-    nvidia-settings \
-    nvidia-kmod-common \
-    && dnf5 clean all
-
-# Enable additional repos for other packages (optional)
 # Add nvidia-container-toolkit repo for container GPU support
 RUN curl -Lo /etc/yum.repos.d/nvidia-container-toolkit.repo \
     https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo || true
