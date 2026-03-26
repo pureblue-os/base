@@ -1,62 +1,61 @@
-# Pureblue OS Base - NVIDIA Open
-# Base image with NVIDIA open-source drivers
+# Pureblue OS Base - NVIDIA Open (Self-Built)
+# Base image with self-built NVIDIA open-source kernel modules
 
 ARG FEDORA_VERSION
 ARG REGISTRY
 
-# Stage 1: Get akmods RPMs (NVIDIA open drivers + kernel modules)
-FROM ghcr.io/ublue-os/akmods-nvidia-open:main-${FEDORA_VERSION} AS akmods-nvidia
-
-# Stage 2: Get common akmods
-FROM ghcr.io/ublue-os/akmods:main-${FEDORA_VERSION} AS akmods-common
-
-# Stage 3: Main build from our base image
 FROM ${REGISTRY}/base:${FEDORA_VERSION}
 
-# Re-declare build args for this stage
 ARG FEDORA_VERSION
 ARG REGISTRY
 
-# Copy entire akmods filesystem (contains RPMs at /tmp/rpms)
-COPY --from=akmods-nvidia / /tmp/akmods-nvidia
-COPY --from=akmods-common / /tmp/akmods-common
+# Get kernel version
+RUN KERNEL_VERSION=$(rpm -q kernel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}') && \
+    echo "Building for kernel: ${KERNEL_VERSION}" && \
+    echo "${KERNEL_VERSION}" > /tmp/kernel-version
 
-# Install matching kernel from akmods (required for kmod compatibility)
+# Add negativo17 NVIDIA repo
+RUN dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo && \
+    sed -i 's/enabled=1/enabled=0/' /etc/yum.repos.d/negativo17-fedora-nvidia.repo
+
+# Install build dependencies
 RUN dnf5 install -y \
-    /tmp/akmods-nvidia/kernel-rpms/kernel-[0-9]*.rpm \
-    /tmp/akmods-nvidia/kernel-rpms/kernel-core-*.rpm \
-    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-*.rpm \
-    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-core-*.rpm \
-    /tmp/akmods-nvidia/kernel-rpms/kernel-modules-extra-*.rpm
+    kernel-devel-$(cat /tmp/kernel-version) \
+    akmod-nvidia \
+    gcc \
+    make \
+    elfutils-libelf-devel \
+    && dnf5 clean all
 
-# Install NVIDIA support packages (this creates nvidia repos)
-RUN dnf5 install -y \
-    /tmp/akmods-nvidia/rpms/ublue-os/ublue-os-nvidia-addons-*.rpm \
-    /tmp/akmods-common/rpms/ublue-os/ublue-os-akmods-addons-*.rpm || true
+# Build the kernel module using akmods
+# KERNEL_MODULE_TYPE=open tells akmods to build the open driver variant
+ENV KERNEL_MODULE_TYPE=open
+RUN KERNEL_VERSION=$(cat /tmp/kernel-version) && \
+    akmods --force --kernels "${KERNEL_VERSION}" --kmod "nvidia"
 
-# Enable NVIDIA repos
-RUN find /etc/yum.repos.d/ -name "*nvidia*" -exec sed -i 's/enabled=0/enabled=1/g' {} \; || true
-
-# Install NVIDIA drivers from repos (this provides nvidia-kmod-common)
-RUN dnf5 install -y \
-    nvidia-driver \
-    nvidia-driver-cuda \
-    nvidia-settings || \
-    echo "NVIDIA packages not found in repos, will install kmod directly"
-
-# Verify NVIDIA versions match before installing
-# The kmod-nvidia RPM version MUST match the nvidia-driver version from repos
-RUN KMOD_RPM=$(ls /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia-*.rpm | head -1) && \
-    KMOD_VERSION=$(rpm -qp --qf '%{VERSION}' "${KMOD_RPM}") && \
-    echo "Pre-built kmod-nvidia version from ublue-os: ${KMOD_VERSION}" && \
-    DRIVER_VERSION=$(dnf5 repoquery --qf '%{VERSION}' nvidia-driver 2>/dev/null | head -1) && \
-    echo "NVIDIA driver version in repos: ${DRIVER_VERSION}" && \
+# Verify the modules were built and match the driver version
+RUN KERNEL_VERSION=$(cat /tmp/kernel-version) && \
+    KMOD_VERSION=$(modinfo -F version /usr/lib/modules/"${KERNEL_VERSION}"/extra/nvidia/nvidia.ko.xz) && \
+    echo "Built kmod-nvidia version: ${KMOD_VERSION}" && \
+    DRIVER_VERSION=$(dnf5 repoquery --installed --qf '%{VERSION}' nvidia-driver) && \
+    echo "nvidia-driver version: ${DRIVER_VERSION}" && \
     if [ "${KMOD_VERSION}" != "${DRIVER_VERSION}" ]; then \
-        echo "ERROR: Version mismatch! kmod-nvidia=${KMOD_VERSION}, nvidia-driver=${DRIVER_VERSION}"; \
+        echo "ERROR: Version mismatch! kmod=${KMOD_VERSION}, driver=${DRIVER_VERSION}"; \
         exit 1; \
     fi
 
-# Install the kernel module (nvidia-kmod-common should be satisfied)
+# Now install the rest of the NVIDIA userspace packages
+# These must match the akmod-nvidia version we just built
 RUN dnf5 install -y \
-    /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia-*.rpm \
-    && rm -rf /tmp/akmods-nvidia /tmp/akmods-common
+    nvidia-driver \
+    nvidia-driver-cuda \
+    nvidia-settings \
+    nvidia-kmod-common \
+    && dnf5 clean all
+
+# Enable additional repos for other packages (optional)
+# Add nvidia-container-toolkit repo for container GPU support
+RUN dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo || true
+
+# Cleanup
+RUN rm -f /tmp/kernel-version
