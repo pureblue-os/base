@@ -19,8 +19,9 @@ RUN curl -Lo /etc/yum.repos.d/negativo17-fedora-nvidia.repo \
     https://negativo17.org/repos/fedora-nvidia.repo && \
     sed -i 's/enabled=1/enabled=0/' /etc/yum.repos.d/negativo17-fedora-nvidia.repo
 
-# Install build dependencies
+# Install build dependencies (enable negativo17 temporarily)
 RUN dnf5 install -y \
+    --enablerepo=negativo17-fedora-nvidia \
     kernel-devel-$(cat /tmp/kernel-version) \
     akmod-nvidia \
     gcc \
@@ -45,9 +46,10 @@ RUN KERNEL_VERSION=$(cat /tmp/kernel-version) && \
         exit 1; \
     fi
 
-# Now install the rest of the NVIDIA userspace packages
+# Now install the rest of the NVIDIA userspace packages (enable negativo17 temporarily)
 # These must match the akmod-nvidia version we just built
 RUN dnf5 install -y \
+    --enablerepo=negativo17-fedora-nvidia \
     nvidia-driver \
     nvidia-driver-cuda \
     nvidia-settings \
@@ -56,7 +58,8 @@ RUN dnf5 install -y \
 
 # Enable additional repos for other packages (optional)
 # Add nvidia-container-toolkit repo for container GPU support
-RUN dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo || true
+RUN curl -Lo /etc/yum.repos.d/nvidia-container-toolkit.repo \
+    https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo || true
 
 # Cleanup
 RUN rm -f /tmp/kernel-version
